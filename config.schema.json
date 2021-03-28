@@ -1,0 +1,28 @@
+{
+  "pluginAlias": "Kef-avr",
+  "pluginType": "platform",
+  "singular": true,
+  "schema": {
+    "type": "object",
+    "properties": {
+      "ip": {
+        "title": "IP Address",
+        "type": "string",
+        "required": true,
+        "default": ""
+      },
+      "name": {
+        "title": "Name",
+        "type": "string",
+        "required": false,
+        "default": "Kef Speakers"
+      },
+      "cacheDirectory": {
+        "title": "Cache Directory",
+        "type": "string",
+        "required": false,
+        "default": ".node_persist"
+      }
+    }
+  }
+}
