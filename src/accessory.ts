@@ -7,6 +7,7 @@ interface Input {
   id: string;
   name: string;
   index: number;
+  visible: boolean;
 }
 
 interface CachedServiceData {
@@ -17,11 +18,13 @@ interface CachedServiceData {
 
 export class KefSpeakersAccessory {
   private service: Service;
-  // private fanService: Service;
   private inputServices: Service[] = [];
+  private pollingInterval: number = 2500;
+  private volumeStep: number = 3;
 
   private state = {
-    isPlaying: true as boolean,
+    powerState: '0' as string,
+    changingPowerState: false as boolean,
     inputs: [] as Input[],
     connectionError: false as boolean,
   };
@@ -38,14 +41,13 @@ export class KefSpeakersAccessory {
       .setCharacteristic(this.platform.Characteristic.FirmwareRevision, this.accessory.context.firmwareVersion || 'Unknown');
 
     this.service = this.accessory.addService(this.platform.Service.Television);
-    // this.fanService = this.accessory.addService(this.platform.Service.Fan);
 
     this.init();
 
-    // regularly ping the Speakers to keep power/input state syncronised
+    // Regularly ping the speakers to keep power/input state syncronised
     setInterval(
       this.getPowerState.bind(this, this.updateSpeakersState.bind(this)),
-      5000,
+      this.pollingInterval
     );
   }
 
@@ -94,97 +96,86 @@ export class KefSpeakersAccessory {
     // Input Source Get/Set
     this.service
       .getCharacteristic(this.platform.Characteristic.ActiveIdentifier)
-      .on('get', this.getInputState.bind(this))
-      .on('set', this.setInputState.bind(this));
+      .on('get', this.getInputSource.bind(this))
+      .on('set', this.setInputSource.bind(this));
 
     // Remote Key Set
     this.service.getCharacteristic(this.platform.Characteristic.RemoteKey)
       .on('set', (newValue, callback) => {
         switch(newValue) {
-          // case this.platform.Characteristic.RemoteKey.REWIND:
-          //   this.platform.log.info('set Remote Key Pressed: REWIND');
-          //   this.platform.KefAPI.rewind();
-          //   callback(null);
-          //   break;
+          case this.platform.Characteristic.RemoteKey.REWIND:
+            this.platform.log.info('set Remote Key Pressed: REWIND');
+            this.sendPlayerCommand('previous', callback);
+            callback(null);
+            break;
 
-          // case this.platform.Characteristic.RemoteKey.FAST_FORWARD:
-          //   this.platform.log.info('set Remote Key Pressed: FAST_FORWARD');
-          //   this.platform.KefAPI.skip();
-          //   callback(null);
-          //   break;
+          case this.platform.Characteristic.RemoteKey.FAST_FORWARD:
+            this.platform.log.info('set Remote Key Pressed: FAST_FORWARD');
+            this.sendPlayerCommand('next', callback);
+            callback(null);
+            break;
 
-          // case this.platform.Characteristic.RemoteKey.NEXT_TRACK:
-          //   this.platform.log.info('set Remote Key Pressed: NEXT_TRACK');
-          //   sendRemoteCode('7F016D92', callback);
-          //   break;
+          case this.platform.Characteristic.RemoteKey.NEXT_TRACK:
+            this.platform.log.info('set Remote Key Pressed: NEXT_TRACK');
+            this.sendPlayerCommand('next', callback);
+            break;
 
-          // case this.platform.Characteristic.RemoteKey.PREVIOUS_TRACK:
-          //   this.platform.log.info('set Remote Key Pressed: PREVIOUS_TRACK');
-          //   sendRemoteCode('7F016C93', callback);
-          //   break;
+          case this.platform.Characteristic.RemoteKey.PREVIOUS_TRACK:
+            this.platform.log.info('set Remote Key Pressed: NEXT_TRACK');
+            this.sendPlayerCommand('previous', callback);
+            break;
 
           case this.platform.Characteristic.RemoteKey.ARROW_UP:
             this.platform.log.info('set Remote Key Pressed: ARROW_UP');
-            this.selectInputState(1, callback);
+            this.selectVolume(0, callback);
             break;
 
           case this.platform.Characteristic.RemoteKey.ARROW_DOWN:
             this.platform.log.info('set Remote Key Pressed: ARROW_DOWN');
-            this.selectInputState(0, callback);
+            this.selectVolume(1, callback);
             break;
 
           case this.platform.Characteristic.RemoteKey.ARROW_LEFT:
             this.platform.log.info('set Remote Key Pressed: ARROW_LEFT');
-            this.selectVolume(1, callback);
+            this.sendPlayerCommand('previous', callback);
             break;
 
           case this.platform.Characteristic.RemoteKey.ARROW_RIGHT:
             this.platform.log.info('set Remote Key Pressed: ARROW_RIGHT');
-            this.selectVolume(0, callback);
+            this.sendPlayerCommand('next', callback);
             break;
 
-          // case this.platform.Characteristic.RemoteKey.SELECT:
-          //   this.platform.log.info('set Remote Key Pressed: SELECT');
-          //   sendRemoteCode('7A85DE21', callback);
-          //   break;
+          case this.platform.Characteristic.RemoteKey.SELECT:
+            this.platform.log.info('set Remote Key Pressed: SELECT');
+            this.sendPlayerCommand('pause', callback);
+            break;
 
-          // case this.platform.Characteristic.RemoteKey.BACK:
-          //   this.platform.log.info('set Remote Key Pressed: BACK');
-          //   sendRemoteCode('7A85AA55', callback);
-          //   break;
+          case this.platform.Characteristic.RemoteKey.BACK:
+            this.platform.log.info('set Remote Key Pressed: BACK');
+            this.selectInputSource(1, callback);
+            break;
 
-          // case this.platform.Characteristic.RemoteKey.EXIT:
-          //   this.platform.log.info('set Remote Key Pressed: EXIT');
-          //   sendRemoteCode('7A85AA55', callback);
-          //   break;
+          case this.platform.Characteristic.RemoteKey.EXIT:
+            this.platform.log.info('set Remote Key Pressed: EXIT');
+            this.sendPlayerCommand('pause', callback);
+            break;
 
-          // case this.platform.Characteristic.RemoteKey.PLAY_PAUSE:
-          //   this.platform.log.info('set Remote Key Pressed: PLAY_PAUSE');
-          //   if (this.state.isPlaying) {
-          //     this.platform.KefAPI.pause();
-          //     // this.sendRemoteCode('7F016798', callback);
-          //   } else {
-          //     this.platform.KefAPI.play();
-          //     // this.sendRemoteCode('7F016897', callback);
-          //   }
+          case this.platform.Characteristic.RemoteKey.PLAY_PAUSE:
+            this.platform.log.info('set Remote Key Pressed: PLAY_PAUSE');
+            this.sendPlayerCommand('pause', callback);
 
-          //   this.state.isPlaying = !this.state.isPlaying;
+            break;
 
-          //   callback(null);
-
-          //   break;
-
-          // case this.platform.Characteristic.RemoteKey.INFORMATION:
-          //   this.platform.log.info('set Remote Key Pressed: INFORMATION');
-          //   sendRemoteCode('7A851F60', callback);
-          //   break;
+          case this.platform.Characteristic.RemoteKey.INFORMATION:
+            this.platform.log.info('set Remote Key Pressed: INFORMATION');
+            this.selectInputSource(0, callback);
+            break;
 
           default:
             this.platform.log.info('unhandled Remote Key Pressed');
+            callback(null)
             break;
         }
-
-        callback(null)
       });
 
     return;
@@ -219,21 +210,6 @@ export class KefSpeakersAccessory {
         this.getMute(callback);
       });
 
-    // Fan Service (as part of speaker)
-
-    // // create handlers for required characteristics
-    // this.fanService.getCharacteristic(this.platform.Characteristic.On)
-    //   .on('get', this.getPowerState.bind(this))
-    //   .on('set', this.setPowerState.bind(this));
-
-    // // Handle volume
-    // this.fanService.getCharacteristic(this.platform.Characteristic.RotationSpeed)
-    //   .on('set', (value: CharacteristicValue, callback: CharacteristicSetCallback) => {
-    //     this.setVolume(value, callback);
-    //   }).on('get', (callback: CharacteristicSetCallback) => {
-    //     this.getVolume(callback);
-    //   });
-
     return;
   }
 
@@ -246,7 +222,7 @@ export class KefSpeakersAccessory {
 
         this.service.updateCharacteristic(
           this.platform.Characteristic.ActiveIdentifier,
-          index === -1 ? 0 : index,
+          index === -1 ? 0 : index // Fallback to first source,
         );
 
         if (this.state.connectionError) {
@@ -270,26 +246,41 @@ export class KefSpeakersAccessory {
   }
 
   getPowerState(callback: CharacteristicGetCallback) {
-    this.platform.KefAPI.isOn()
-      .then(result => {
-        callback(null, result);
-      })
-      .catch(error => {
-        callback(error, false);
-      });
+    if (this.state.changingPowerState) {
+      callback(null, this.state.powerState);
+    } else {
+      this.platform.KefAPI.isOn()
+        .then(result => {
+          this.state.powerState = result;
+
+          callback(null, result);
+        })
+        .catch(error => {
+          callback(error, false);
+        });
+    }
   }
 
   setPowerState(state: CharacteristicValue, callback: CharacteristicSetCallback) {
+    this.state.changingPowerState = true
+    this.state.powerState = state as string
+
     if (state) {
-      this.getPowerState((_, on) => {
-        if (on == '0') {
-          this.platform.log.info('Power On');
-          this.platform.KefAPI.powerOn();
-        }
-      });
+      this.platform.log.info('Power On');
+      this.platform.KefAPI.powerOn();
+
+      // Worst case scenario takes 10 seconds to power on
+      setTimeout(() => {
+        this.state.changingPowerState = false;
+      }, 10000);
     } else {
       this.platform.log.info('Power Off');
       this.platform.KefAPI.powerOff();
+
+      // Power off takes about 5 seconds
+      setTimeout(() => {
+        this.state.changingPowerState = false;
+      }, 5000);
     }
 
     callback(null);
@@ -301,11 +292,15 @@ export class KefSpeakersAccessory {
         const newVolume = parseInt(volume)
 
         if (direction === 0) {
-          this.platform.log.info('Volume Up: ', (newVolume + 5));
-          this.platform.KefAPI.setVolume(newVolume + 5);
+          const newVolume = parseInt(volume) + this.volumeStep
+
+          this.platform.log.info('Volume Up: ', (newVolume));
+          this.platform.KefAPI.setVolume(newVolume);
         } else {
-          this.platform.log.info('Volume Down: ', (newVolume - 5));
-          this.platform.KefAPI.setVolume(newVolume - 5);
+          const newVolume = parseInt(volume) - this.volumeStep
+
+          this.platform.log.info('Volume Down: ', (newVolume));
+          this.platform.KefAPI.setVolume(newVolume);
         }
 
         callback(null);
@@ -360,20 +355,37 @@ export class KefSpeakersAccessory {
       });
   }
 
-  selectInputState(direction: CharacteristicValue, callback: CharacteristicSetCallback) {
+  sendPlayerCommand(command: String, callback: CharacteristicSetCallback) {
+    this.platform.KefAPI.sendPlayerCommand(command)
+      .then(() => {
+        callback(null)
+      });
+  }
+
+  selectInputSource(direction: CharacteristicValue, callback: CharacteristicSetCallback) {
     this.platform.KefAPI.getInputSource()
       .then(currentSource => {
-        const currentInput = this.state.inputs.find(input => input.id === currentSource);
-        const currentIndex = currentInput ? currentInput.index : -1
+        const currentInput = this.state.inputs.find(input => input.id === currentSource)
+        const visibleInputs = this.state.inputs.filter(input => input.visible)
+
+        let currentIndex = -1
+
+        if (currentInput) {
+          currentIndex = visibleInputs.indexOf(currentInput)
+        }
 
         if (direction === 0) {
-          const nextInput = this.state.inputs.find(input => input.index === currentIndex + 1);
+          const nextInput = visibleInputs[currentIndex + 1]
 
-          this.setInputState(nextInput?.index || this.state.inputs.length, callback)
+          if (nextInput) {
+            return this.setInputSource(nextInput.index, callback);
+          }
         } else {
-          const nextInput = this.state.inputs.find(input => input.index === currentIndex - 1);
+          const nextInput = visibleInputs[currentIndex - 1]
 
-          this.setInputState(nextInput?.index || 0, callback)
+          if (nextInput) {
+            return this.setInputSource(nextInput.index, callback);
+          }
         }
 
         callback(null);
@@ -383,32 +395,26 @@ export class KefSpeakersAccessory {
       });
   }
 
-  getInputState(callback: CharacteristicGetCallback) {
+  getInputSource(callback: CharacteristicGetCallback) {
     this.platform.KefAPI.getInputSource()
       .then(source => {
-        const currentSource = source === 'standby' ? 'wifi' : source
+        const currentSource: String = source === 'standby' ? 'wifi' : source
 
         const input: Input | undefined = this.state.inputs.find(input => input.id === currentSource);
 
         this.platform.log.debug(`Current input: ${currentSource}`);
 
         if (!input) {
-          return;
+          this.platform.log.debug(`Could not get input: ${currentSource}`);
+          return; //callback(null, 0);
         }
 
         this.platform.log.info(`Current input: ${input.name} (${input.id})`);
-
-        this.state.inputs.filter((input, index) => {
-          if (input.id === source) {
-            return callback(null, index);
-          }
-
-          return;
-        });
+        return callback(null, input.index);
       });
   }
 
-  setInputState(inputIdentifier: CharacteristicValue, callback: CharacteristicSetCallback) {
+  setInputSource(inputIdentifier: CharacteristicValue, callback: CharacteristicSetCallback) {
     const input: Input = this.state.inputs[Number(inputIdentifier)];
     this.platform.log.info(`Set input: ${input.name} (${input.id})`);
     this.platform.KefAPI.setInputSource(input.id);
@@ -419,16 +425,17 @@ export class KefSpeakersAccessory {
     const allInputs = this.accessory.context.inputs;
     this.state.inputs = [];
 
-    allInputs.forEach((feature, index) => {
+    allInputs.forEach((source, index) => {
       // Already in state, do we need this?
-      if (this.state.inputs.find(input => input.id == feature)) {
+      if (this.state.inputs.find(input => input.id == source)) {
         return
       }
 
       this.state.inputs.push({
-        id: feature,
-        name: feature.toUpperCase(), // Humanize me
-        index: index
+        id: source,
+        name: source.toUpperCase(), // Humanize me
+        index: index,
+        visible: true
       });
     });
   }
@@ -448,6 +455,10 @@ export class KefSpeakersAccessory {
             Please check your Homebridge instance has permission to access "${this.platform.config.cacheDirectory}"
             or set a different cache directory using the "cacheDirectory" config property.
           `);
+        }
+
+        if (cachedService) {
+          input.visible = cachedService.CurrentVisibilityState === 0
         }
 
         try {
@@ -492,6 +503,10 @@ export class KefSpeakersAccessory {
               inputService.updateCharacteristic(this.platform.Characteristic.CurrentVisibilityState, targetVisibilityState);
 
               if (cachedService?.CurrentVisibilityState !== targetVisibilityState) {
+                if (cachedService) {
+                  input.visible = targetVisibilityState === 0
+                }
+
                 storage.setItem(`input_${i}`, {
                   ConfiguredName: inputService.getCharacteristic(this.platform.Characteristic.ConfiguredName).value,
                   CurrentVisibilityState: targetVisibilityState,

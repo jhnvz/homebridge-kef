@@ -52,8 +52,8 @@ export default class KefAPI {
 
   isOn() {
     return new Promise<string>((resolve, _reject) => {
-      this.getInputSource().then((inputSource) => {
-        resolve(inputSource === 'standby' ? '0' : '1')
+      this._getData('roles=value&path=settings%3A%2Fkef%2Fhost%2FspeakerStatus').then((response) => {
+        resolve(response[0].kefSpeakerStatus === 'standby' ? '0' : '1')
       });
     });
   }
@@ -116,6 +116,46 @@ export default class KefAPI {
     });
   }
 
+  sendPlayerCommand(command: String) {
+    const data = {
+      "path": "player:player/control",
+      "role": "activate",
+      "value": {
+        "control": command
+      }
+    }
+
+    return new Promise<null>((resolve, _reject) => {
+      this._setData(data).then(() => {
+        resolve(null);
+      });
+    });
+  }
+
+  getPlayerState() {
+    return new Promise<string>((resolve, _reject) => {
+      this._getData("roles=value&path=player%3Aplayer%2Fdata").then((response) => {
+        const state = response[0].state || response[0].mediaRoles.state
+
+        switch(state) {
+          case 'playing':
+            resolve('0');
+            break
+          case 'pauzed':
+            resolve('1');
+            break
+          case 'stopped':
+            resolve('2');
+            break
+          default:
+            resolve('4');
+            break
+        }
+
+      });
+    });
+  }
+
   _getModelName() {
     return new Promise<string|null>((resolve, _reject) => {
       this._getData("path=settings%3A%2Fkef%2Fhost%2FmodelName&roles=value").then((response) => {
@@ -144,8 +184,6 @@ export default class KefAPI {
         const text = await response.text()
         const json = JSON.parse(text);
 
-        // console.log(text, json);
-
         resolve(json);
       });
     });
@@ -162,8 +200,6 @@ export default class KefAPI {
       return fetch(`http://${this.ip}/api/setData`, params).then(async (response) => {
         const text = await response.text()
         const json = JSON.parse(text);
-
-        // console.log(text, json);
 
         resolve(json);
       });

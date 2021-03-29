@@ -34,7 +34,7 @@ export class KefPlatform implements IndependentPlatformPlugin {
           const inputs = systemConfig.inputs;
 
           const device = {
-            UUID: this.api.hap.uuid.generate(`${config.serialNumber}_7`),
+            UUID: this.api.hap.uuid.generate(`${config.serialNumber}_1`),
             displayName: this.config.name ? this.config.name : 'Kef Speakers',
           };
 

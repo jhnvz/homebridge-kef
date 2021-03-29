@@ -1,102 +1,276 @@
+# UNDER DEVELOPMENT !!!!!
 
-<p align="center">
+# Setting source
 
-<img src="https://github.com/homebridge/branding/raw/master/logos/homebridge-wordmark-logo-vertical.png" width="150">
+Options:
+- wifi
+- bluetooth
+- tv
+- optical
+- coaxial
+- analog
+- Standby
 
-</p>
+# Getting status
 
-# homebridge-kef
+url `GET /api/getData?roles=value&path=settings%3A%2Fkef%2Fhost%2FspeakerStatus`
 
-`homebridge-kef` is a Homebridge plugin allowing you to control your AVR & any connected HDMI-CEC controllable devices with the Apple Home app & Control Centre remote! It should work with all network accessible receivers.
-
-The Kef Speakers will display as an Audio Receiver with Power, Input, Volume & Remote Control.
-
-## Requirements
-* iOS 14 (or later)
-* [Homebridge](https://homebridge.io/) v1.1.6 (or later)
-
-## Installation
-Install homebridge-kef:
-```sh
-npm install -g homebridge-kef
+response:
+```
+[
+  {
+    "kefSpeakerStatus": "standby",
+    "type": "kefSpeakerStatus"
+  }
+]
 ```
 
-## Usage Notes
-* Quickly switch input using the information (i) button in the Control Centre remote
-* Adjust the volume using the physical volume buttons on your iOS device whilst the Control Centre remote is open
+# Getting player data
 
-## Configuration
-Add a new platform to your homebridge `config.json`.
+url `GET /api/getData?roles=value&path=player%3Aplayer%2Fdata`
 
-Specific "favourite" inputs can be added manually or all available inputs reported by the AVR will be set.
+response:
+```
+[
+  {
+    "controls": {
+      "pause": true,
+      "playMode": {
+        "shuffleRepeatAll": true,
+        "repeatOne": true,
+        "repeatAll": true,
+        "shuffle": true,
+        "shuffleRepeatOne": true
+      },
+      "next_": true,
+      "seekTime": true,
+      "previous": true,
+      "seekBytes": true
+    },
+    "trackRoles": {
+      "icon": "http://resources.tidal.com/images/8fa2bb67/13cd/47ed/b2ba/63c3b641d7d4/750x750.jpg",
+      "images": {
+        "images": [
+          {
+            "height": 160,
+            "width": 160,
+            "url": "http://resources.tidal.com/images/8fa2bb67/13cd/47ed/b2ba/63c3b641d7d4/160x160.jpg"
+          },
+          {
+            "height": 320,
+            "width": 320,
+            "url": "http://resources.tidal.com/images/8fa2bb67/13cd/47ed/b2ba/63c3b641d7d4/320x320.jpg"
+          },
+          {
+            "height": 750,
+            "width": 750,
+            "url": "http://resources.tidal.com/images/8fa2bb67/13cd/47ed/b2ba/63c3b641d7d4/750x750.jpg"
+          }
+        ]
+      },
+      "title": "Unlearn",
+      "context": {
+        "path": "airable:context:AAAALABBAGQAZAAgAHQAbwAgAFQASQBEAEEATAAgAGYAYQB2AG8AcgBpAHQAZQBzAAAAzABoAHQAdABwAHMAOgAvAC8AOAA0ADQAOAAyADMAOQA3ADcAMAAuAGEAaQByAGEAYgBsAGUALgBpAG8ALwBhAGMAdABpAG8AbgBzAC8AdABpAGQAYQBsAC8AdAByAGEAYwBrAC8AMQA3ADgAMQAyADIAMQAzADQALwBmAGEAdgBvAHIAaQB0AGUAcwAvAGkAbgBzAGUAcgB0AD8AcgA9ACUAMgBGAHQAaQBkAGEAbAAlADIARgBuAGUAdwAlADIARgB0AHIAYQBjAGsAcwAAAEwAYQBpAHIAYQBiAGwAZQA6AC8ALwB0AGkAZABhAGwALwBhAGMAdABpAG8AbgAvAGYAYQB2AG8AcgBpAHQAZQAuAGkAbgBzAGUAcgB0AAAAAAAeAEEAZABkACAAdABvACAAcABsAGEAeQBsAGkAcwB0AAAA2ABoAHQAdABwAHMAOgAvAC8AOAA0ADQAOAAyADMAOQA3ADcAMAAuAGEAaQByAGEAYgBsAGUALgBpAG8ALwBhAGMAdABpAG8AbgBzAC8AdABpAGQAYQBsAC8AdAByAGEAYwBrAC8AMQA3ADgAMQAyADIAMQAzADQALwBwAGwAYQB5AGwAaQBzAHQALwBjAGgAbwBvAHMAZQAvAGkAbgBzAGUAcgB0AD8AcgA9ACUAMgBGAHQAaQBkAGEAbAAlADIARgBuAGUAdwAlADIARgB0AHIAYQBjAGsAcwAAAEwAYQBpAHIAYQBiAGwAZQA6AC8ALwB0AGkAZABhAGwALwBhAGMAdABpAG8AbgAvAHAAbABhAHkAbABpAHMAdAAuAGkAbgBzAGUAcgB0AQA\\="
+      },
+      "type": "audio",
+      "path": "playlists:item/2",
+      "value": {
+        "type": "i32_",
+        "i32_": 1
+      },
+      "quality": [
+        "low",
+        "high",
+        "lossless",
+        "hires"
+      ],
+      "mediaData": {
+        "metaData": {
+          "contentPlayContextPath": "airable:playContext:https://8448239770.airable.io/id/tidal/track/178122134",
+          "prePlayTimeOffset": 0,
+          "prePlayPath": "airable:preplay\\?serviceType\\=tidal&dataType\\=track&objectId\\=178122134",
+          "contentStateChangePath": "airable:statechange",
+          "album": "FRIENDS KEEP SECRETS 2",
+          "playLogicPath": "playlists:playlogic",
+          "maximumRetryCount": 4,
+          "serviceID": "tidal",
+          "prePlayData": "AAAABAAAAHYAaAB0AHQAcABzADoALwAvADgANAA0ADgAMgAzADkANwA3ADAALgBhAGkAcgBhAGIAbABlAC4AaQBvAC8AdABpAGQAYQBsAC8AcABsAGEAeQAvAG0AcQBhAC8AMgA4ADIAMgAvADEANwA4ADEAMgAyADEAMwA0AAAAeABoAHQAdABwAHMAOgAvAC8AOAA0ADQAOAAyADMAOQA3ADcAMAAuAGEAaQByAGEAYgBsAGUALgBpAG8ALwB0AGkAZABhAGwALwBwAGwAYQB5AC8AZgBsAGEAYwAvADEANAAxADEALwAxADcAOAAxADIAMgAxADMANAAAAHQAaAB0AHQAcABzADoALwAvADgANAA0ADgAMgAzADkANwA3ADAALgBhAGkAcgBhAGIAbABlAC4AaQBvAC8AdABpAGQAYQBsAC8AcABsAGEAeQAvAGEAYQBjAC8AMwAyADAALwAxADcAOAAxADIAMgAxADMANAAAAHQAaAB0AHQAcABzADoALwAvADgANAA0ADgAMgAzADkANwA3ADAALgBhAGkAcgBhAGIAbABlAC4AaQBvAC8AdABpAGQAYQBsAC8AcABsAGEAeQAvAGEAYQBjAC8AMQA5ADIALwAxADcAOAAxADIAMgAxADMANA==",
+          "artist": "benny blanco"
+        },
+        "resources": [
+          {
+            "nrAudioChannels": 2,
+            "codec": "Free Lossless Audio Codec (FLAC)",
+            "maxBitRate": 1755214,
+            "mqaInfo": {
+              "customRateUsed": false,
+              "fullStringMqaInfo": "MQA [ 44100Hz  ]",
+              "outputSampleRate": 192000,
+              "state": "valid",
+              "originalSampleRate": 44100,
+              "originalBitDepth": 24,
+              "originalSampleRateCustom": ""
+            },
+            "bitRate": 1353352,
+            "bitsPerSample": 24,
+            "minBitRate": 1057452,
+            "uri": "http://ab-pr-fa.audio.tidal.com/ff6fe795668947056d2db1daf2ed77ff_39.flac?token=1616975668~YTI0Y2YxMDNhNjY3NzIxNzg0ZWIxYjJiMjU1NzE5ZTQ0MTlkNzA4MA==",
+            "sampleFrequency": 192000,
+            "mimeType": "audio/mpeg"
+          }
+        ]
+      },
+      "id": "2",
+      "containerType": "none"
+    },
+    "mediaRoles": {
+      "title": "PlayQueue tracks",
+      "timestamp": 1616969161692,
+      "type": "container",
+      "path": "playlists:pq/getitems",
+      "mediaData": {
+        "metaData": {
+          "playLogicPath": "playlists:playlogic"
+        }
+      },
+      "containerType": "none"
+    },
+    "matchingMediaRoles": [],
+    "state": "paused",
+    "status": {
+      "timeSeek": true,
+      "byteSeek": true,
+      "duration": 154728
+    },
+    "streamId": 501,
+    "playId": {
+      "timestamp": 1787276546,
+      "systemMemberId": "kef_one-9f86e104-ae34-495d-a2f8-0869c1618d62"
+    }
+  }
+]
 
-Example configuration:
+mediaRoles.state
+```
 
-```js
+# Getting source
+
+url `GET /api/getData?path=settings%3A%2Fkef%2Fplay%2FphysicalSource&roles=value`
+
+response:
+```
+[
+  {
+    "type": "kefPhysicalSource",
+    "kefPhysicalSource": "standby"
+  }
+]
+```
+
+# Getting player state
+
+url `GET /api/getData?path=player%3Aplayer%2Fdata&roles=value`
+
+response:
+```
+[
+  {
+    "error2": {},
+    "keepActive": false,
+    "state": "stopped",
+    "error": "",
+    "playId": {
+      "timestamp": 1741335583,
+      "systemMemberId": "kef_one-9f86e104-ae34-495d-a2f8-0869c1618d62"
+    }
+  }
+]
+```
+
+# Set source
+
+url: `POST /api/setData`
+
+body:
+```
 {
-    "platforms": [
-      {
-        "platform": "Kef-avr",
-        "name": "Kef RX-V685",
-        "ip": "192.168.1.12",
-        "cacheDirectory": ""
-    ]
+  "path": "settings:/kef/play/physicalSource",
+  "role": "value",
+  "value": {
+    "type": "kefPhysicalSource",
+    "kefPhysicalSource": "wifi"
+  }
 }
 ```
 
-#### Important Installation/Configuration Notes:
-Kef Speakers caches input/name data using [node-persist](https://github.com/simonlast/node-persist), by default this should be located within the `homebridge-kef` plugin directory. If your homebridge instance cannot write to this directory you can define an alternative cache data location using the `cacheDirectory` config option
+# Setting volume
 
-The AVR is published as an external accessory so you'll need to add it manually.
+url: `POST /api/setData`
 
-Select "Add Accessory" in the Home app, then "I Don't Have a Code or Cannot Scan".
-
-The AVR should then show as an option, enter your Homebridge PIN and you should be good to go.
-
-<img src="https://user-images.githubusercontent.com/1072488/95639584-78824280-0af5-11eb-94cf-c6a8dd9793f4.png" width="320" />
-
-You can define the ports external accessories are assigned by setting a range in your Homebridge config:
-https://github.com/homebridge/homebridge/blob/master/config-sample.json#L12
-
-## Other Kef Receiver Plugins
-#### [homebridge-Kef-zone-tv](https://github.com/NorthernMan54/homebridge-Kef-zone-tv)
-For multi-zone Kef Receivers, and uses the Television control for each zone of the receiver.
-
-#### [homebridge-Kef-home](https://github.com/NorthernMan54/homebridge-Kef-home)
-For multi-zone Kef Receivers, and uses a Fan to control each zone of the receiver.
-
-# Contributing
-
-## Build Plugin
-
-TypeScript needs to be compiled into JavaScript before it can run. The following command will compile the contents of the [`src`](./src) directory and put the resulting code into the `dist` folder.
-
+body:
 ```
-npm run build
+{
+  "path": "player:volume",
+  "role": "value",
+  "value": {
+    "type": "i32_",
+    "i32_": 18
+  }
+}
 ```
 
-## Link To Homebridge
+# Getting volume
 
-Run this command so your global install of Homebridge can discover the plugin in your development environment:
+url: `GET /api/getData?roles=value&path=player%3Avolume`
 
+response:
 ```
-npm link
-```
-
-You can now start Homebridge, use the `-D` flag so you can see debug log messages:
-
-```
-homebridge -D
-```
-
-## Watch For Changes and Build Automatically
-
-If you want to have your code compile automatically as you make changes, and restart Homebridge automatically between changes you can run:
-
-```
-npm run watch
+[
+  {
+    "type": "i32_",
+    "i32_": 35
+  }
+]
 ```
 
-This will launch an instance of Homebridge in debug mode which will restart every time you make a change to the source code. It will load the config stored in the default location under `~/.homebridge`. You may need to stop other running instances of Homebridge while using this command to prevent conflicts. You can adjust the Homebridge startup command in the [`nodemon.json`](./nodemon.json) file.
+# Getting source
 
+url: `GET /api/getData?path=settings%3A%2Fkef%2Fplay%2FphysicalSource&roles=value`
 
+response:
+```
+[
+  {
+    "type": "kefPhysicalSource",
+    "kefPhysicalSource": "bluetooth"
+  }
+]
+```
+
+# Getting model
+
+url: `/api/getData?path=settings%3A%2Fkef%2Fhost%2FmodelName&roles=value`
+
+response:
+```
+[
+  {
+    "type": "string_",
+    "string_": "SP4025"
+  }
+]
+```
+
+# Getting Serial number
+
+url: `/api/getData?roles=value&path=settings%3A%2Fkef%2Fhost%2FserialNumber`
+
+response:
+```
+[
+  {
+    "type": "string_",
+    "string_": "LSW0205276M46R1G"
+  }
+]
+```
